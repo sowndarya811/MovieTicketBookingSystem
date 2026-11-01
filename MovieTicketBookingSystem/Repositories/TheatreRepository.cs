@@ -1,0 +1,72 @@
+﻿using Microsoft.EntityFrameworkCore;
+using MovieTicketBookingSystem.Data;
+using MovieTicketBookingSystem.Models;
+using MovieTicketBookingSystem.Repositories.Interfaces;
+
+namespace MovieTicketBookingSystem.Repositories
+{
+    public class TheatreRepository : ITheatreRepository
+    {
+        private readonly ApplicationDbContext _context;
+
+        public TheatreRepository(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<Theatre> AddAsync(Theatre theatre)
+        {
+            await _context.Theatres.AddAsync(theatre);
+            await _context.SaveChangesAsync();
+
+            return theatre;
+        }
+
+        public async Task<List<Theatre>> GetAllAsync()
+        {
+            return await _context.Theatres
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task<Theatre?> GetByIdAsync(int id)
+        {
+            return await _context.Theatres
+                .FirstOrDefaultAsync(t => t.TheatreId == id);
+        }
+
+        public async Task<Theatre?> UpdateAsync(Theatre theatre)
+        {
+            var existingTheatre = await _context.Theatres
+                .FirstOrDefaultAsync(t => t.TheatreId == theatre.TheatreId);
+
+            if (existingTheatre == null)
+            {
+                return null;
+            }
+
+            existingTheatre.Name = theatre.Name;
+            existingTheatre.Location = theatre.Location;
+
+            await _context.SaveChangesAsync();
+
+            return existingTheatre;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var theatre = await _context.Theatres
+                .FirstOrDefaultAsync(t => t.TheatreId == id);
+
+            if (theatre == null)
+            {
+                return false;
+            }
+
+            _context.Theatres.Remove(theatre);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+    }
+}
