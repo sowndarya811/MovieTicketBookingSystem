@@ -5,7 +5,7 @@ namespace MovieTicketBookingSystem.Services.Interfaces
 {
     public interface IBookingService
     {
-        Task<Booking> CreateBookingAsync(CreateBookingDto dto);
+        Task<Booking> AddAsync(Booking booking);
 
         Task<List<Booking>> GetAllAsync();
 
@@ -21,6 +21,8 @@ namespace MovieTicketBookingSystem.Services.Interfaces
 
         Task AddBookingSeatAsync(BookingSeat bookingSeat);
 
-        Task<bool> CancelBookingAsync(int bookingId);
+        Task<Booking?> CreateBookingAsync(CreateBookingDto dto);
+
+        Task<Booking?> CancelBookingAsync(int bookingId);
     }
 }

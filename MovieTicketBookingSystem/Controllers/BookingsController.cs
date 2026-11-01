@@ -16,22 +16,20 @@ namespace MovieTicketBookingSystem.Controllers
             _bookingService = bookingService;
         }
 
-        // POST: api/Bookings
+        // CREATE BOOKING
         [HttpPost]
-        public async Task<IActionResult> CreateBooking(CreateBookingDto dto)
+        public async Task<IActionResult> CreateBooking(
+            CreateBookingDto dto)
         {
             try
             {
-                var booking = await _bookingService.CreateBookingAsync(dto);
+                var booking =
+                    await _bookingService.CreateBookingAsync(dto);
 
                 return CreatedAtAction(
                     nameof(GetBookingById),
                     new { id = booking.BookingId },
                     booking);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
             }
             catch (InvalidOperationException ex)
             {
@@ -39,20 +37,22 @@ namespace MovieTicketBookingSystem.Controllers
             }
         }
 
-        // GET: api/Bookings
+        // GET ALL BOOKINGS
         [HttpGet]
         public async Task<IActionResult> GetAllBookings()
         {
-            var bookings = await _bookingService.GetAllAsync();
+            var bookings =
+                await _bookingService.GetAllAsync();
 
             return Ok(bookings);
         }
 
-        // GET: api/Bookings/{id}
+        // GET BOOKING BY ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBookingById(int id)
         {
-            var booking = await _bookingService.GetByIdAsync(id);
+            var booking =
+                await _bookingService.GetByIdAsync(id);
 
             if (booking == null)
                 return NotFound("Booking not found.");
@@ -60,54 +60,36 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(booking);
         }
 
-        // PUT: api/Bookings/{id}
+        // UPDATE BOOKING
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBooking(
             int id,
             UpdateBookingDto dto)
         {
-            var existingBooking = await _bookingService.GetByIdAsync(id);
+            var booking = new Booking
+            {
+                BookingId = id,
+                ShowId = dto.ShowId,
+                CustomerName = dto.CustomerName,
+                CustomerPhone = dto.CustomerPhone,
+                Status = dto.Status
+            };
 
-            if (existingBooking == null)
+            var result =
+                await _bookingService.UpdateAsync(booking);
+
+            if (result == null)
                 return NotFound("Booking not found.");
-
-            existingBooking.ShowId = dto.ShowId;
-            existingBooking.CustomerName = dto.CustomerName;
-            existingBooking.CustomerPhone = dto.CustomerPhone;
-            existingBooking.Status = dto.Status;
-
-            var result = await _bookingService.UpdateAsync(existingBooking);
 
             return Ok(result);
         }
 
-        // PUT: api/Bookings/{id}/cancel
-        [HttpPut("{id}/cancel")]
-        public async Task<IActionResult> CancelBooking(int id)
-        {
-            try
-            {
-                var result = await _bookingService.CancelBookingAsync(id);
-
-                if (!result)
-                    return NotFound("Booking not found.");
-
-                return Ok(new
-                {
-                    message = "Booking cancelled successfully."
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ex.Message);
-            }
-        }
-
-        // DELETE: api/Bookings/{id}
+        // DELETE BOOKING
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBooking(int id)
         {
-            var result = await _bookingService.DeleteAsync(id);
+            var result =
+                await _bookingService.DeleteAsync(id);
 
             if (!result)
                 return NotFound("Booking not found.");
@@ -115,50 +97,53 @@ namespace MovieTicketBookingSystem.Controllers
             return NoContent();
         }
 
-        // GET: api/Bookings/show/{showId}
+        // GET BOOKINGS BY SHOW
         [HttpGet("show/{showId}")]
-        public async Task<IActionResult> GetBookingsByShow(int showId)
+        public async Task<IActionResult> GetBookingsByShowId(
+            int showId)
         {
-            var bookings = await _bookingService.GetByShowIdAsync(showId);
+            var bookings =
+                await _bookingService.GetByShowIdAsync(showId);
 
             return Ok(bookings);
         }
 
-        // GET: api/Bookings/{bookingId}/seats
+        // GET BOOKING SEATS
         [HttpGet("{bookingId}/seats")]
-        public async Task<IActionResult> GetBookingSeats(int bookingId)
+        public async Task<IActionResult> GetBookingSeats(
+            int bookingId)
         {
-            var booking = await _bookingService.GetByIdAsync(bookingId);
+            var booking =
+                await _bookingService.GetByIdAsync(bookingId);
 
             if (booking == null)
                 return NotFound("Booking not found.");
 
-            var seats = await _bookingService.GetBookingSeatsAsync(bookingId);
+            var seats =
+                await _bookingService.GetBookingSeatsAsync(
+                    bookingId);
 
             return Ok(seats);
         }
 
-        // POST: api/Bookings/{bookingId}/seats
-        [HttpPost("{bookingId}/seats")]
-        public async Task<IActionResult> AddBookingSeat(
-            int bookingId,
-            CreateBookingSeatDto dto)
+        // CANCEL BOOKING
+        [HttpPut("{id}/cancel")]
+        public async Task<IActionResult> CancelBooking(int id)
         {
-            var booking = await _bookingService.GetByIdAsync(bookingId);
-
-            if (booking == null)
-                return NotFound("Booking not found.");
-
-            var bookingSeat = new BookingSeat
+            try
             {
-                BookingId = bookingId,
-                SeatId = dto.SeatId,
-                Price = dto.Price
-            };
+                var booking =
+                    await _bookingService.CancelBookingAsync(id);
 
-            await _bookingService.AddBookingSeatAsync(bookingSeat);
+                if (booking == null)
+                    return NotFound("Booking not found.");
 
-            return Ok(bookingSeat);
+                return Ok(booking);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
     }
 }

@@ -1,18 +1,13 @@
-﻿using MovieTicketBookingSystem.DTOs.Bookings;
-using MovieTicketBookingSystem.Models;
+﻿using MovieTicketBookingSystem.Models;
 
 namespace MovieTicketBookingSystem.Repositories.Interfaces
 {
     public interface IBookingRepository
     {
-        Task<Booking> CreateBookingAsync(CreateBookingDto dto);
-
+        Task<Booking> AddAsync(Booking booking);
         Task<List<Booking>> GetAllAsync();
-
         Task<Booking?> GetByIdAsync(int id);
-
         Task<Booking?> UpdateAsync(Booking booking);
-
         Task<bool> DeleteAsync(int id);
 
         Task<List<Booking>> GetByShowIdAsync(int showId);
@@ -21,6 +16,10 @@ namespace MovieTicketBookingSystem.Repositories.Interfaces
 
         Task AddBookingSeatAsync(BookingSeat bookingSeat);
 
-        Task<bool> CancelBookingAsync(int bookingId);
+        Task<Booking?> CreateBookingAsync(
+            Booking booking,
+            List<int> seatIds);
+
+        Task<Booking?> CancelBookingAsync(int bookingId);
     }
 }

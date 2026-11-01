@@ -16,6 +16,7 @@ namespace MovieTicketBookingSystem.Controllers
             _showService = showService;
         }
 
+        // CREATE SHOW
         [HttpPost]
         public async Task<IActionResult> AddShow(CreateShowDto dto)
         {
@@ -31,9 +32,10 @@ namespace MovieTicketBookingSystem.Controllers
 
             var result = await _showService.AddAsync(show);
 
-            return Ok(result);
+            return StatusCode(201, result);
         }
 
+        // GET ALL SHOWS
         [HttpGet]
         public async Task<IActionResult> GetAllShows()
         {
@@ -42,6 +44,7 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
+        // GET SHOW BY ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetShowById(int id)
         {
@@ -53,6 +56,7 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
+        // UPDATE SHOW
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateShow(
             int id,
@@ -77,6 +81,7 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
+        // DELETE SHOW
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteShow(int id)
         {
@@ -85,9 +90,10 @@ namespace MovieTicketBookingSystem.Controllers
             if (!result)
                 return NotFound("Show not found.");
 
-            return Ok("Show deleted successfully.");
+            return NoContent();
         }
 
+        // GET SHOWS BY MOVIE
         [HttpGet("movie/{movieId}")]
         public async Task<IActionResult> GetShowsByMovieId(int movieId)
         {
@@ -96,6 +102,7 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
+        // GET SHOWS BY SCREEN
         [HttpGet("screen/{screenId}")]
         public async Task<IActionResult> GetShowsByScreenId(int screenId)
         {
@@ -103,6 +110,8 @@ namespace MovieTicketBookingSystem.Controllers
 
             return Ok(result);
         }
+
+        // GET ALL SHOW SEATS
         [HttpGet("{showId}/seats")]
         public async Task<IActionResult> GetShowSeats(int showId)
         {
@@ -114,6 +123,7 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(seats);
         }
 
+        // GET AVAILABLE SHOW SEATS
         [HttpGet("{showId}/seats/available")]
         public async Task<IActionResult> GetAvailableShowSeats(int showId)
         {
@@ -122,6 +132,7 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(seats);
         }
 
+        // GET BOOKED SHOW SEATS
         [HttpGet("{showId}/seats/booked")]
         public async Task<IActionResult> GetBookedShowSeats(int showId)
         {

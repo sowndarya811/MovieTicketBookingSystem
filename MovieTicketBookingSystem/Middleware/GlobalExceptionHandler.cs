@@ -22,6 +22,24 @@ namespace MovieTicketBookingSystem.Middleware
             {
                 await _next(context);
             }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Business rule validation failed.");
+
+                context.Response.StatusCode =
+                    (int)HttpStatusCode.Conflict;
+
+                context.Response.ContentType = "application/json";
+
+                var response = new
+                {
+                    statusCode = 409,
+                    message = ex.Message
+                };
+
+                await context.Response.WriteAsync(
+                    JsonSerializer.Serialize(response));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An unexpected error occurred.");

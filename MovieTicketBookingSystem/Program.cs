@@ -57,13 +57,14 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
-app.UseMiddleware<GlobalExceptionHandler>();
+
 
 // Configure HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+app.UseMiddleware<GlobalExceptionHandler>();
 
 app.UseHttpsRedirection();
 
