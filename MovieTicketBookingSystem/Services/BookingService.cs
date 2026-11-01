@@ -1,4 +1,5 @@
-﻿using MovieTicketBookingSystem.Models;
+﻿using MovieTicketBookingSystem.DTOs.Bookings;
+using MovieTicketBookingSystem.Models;
 using MovieTicketBookingSystem.Repositories.Interfaces;
 using MovieTicketBookingSystem.Services.Interfaces;
 
@@ -13,9 +14,9 @@ namespace MovieTicketBookingSystem.Services
             _bookingRepository = bookingRepository;
         }
 
-        public async Task<Booking> AddAsync(Booking booking)
+        public async Task<Booking> CreateBookingAsync(CreateBookingDto dto)
         {
-            return await _bookingRepository.AddAsync(booking);
+            return await _bookingRepository.CreateBookingAsync(dto);
         }
 
         public async Task<List<Booking>> GetAllAsync()
@@ -51,6 +52,11 @@ namespace MovieTicketBookingSystem.Services
         public async Task AddBookingSeatAsync(BookingSeat bookingSeat)
         {
             await _bookingRepository.AddBookingSeatAsync(bookingSeat);
+        }
+
+        public async Task<bool> CancelBookingAsync(int bookingId)
+        {
+            return await _bookingRepository.CancelBookingAsync(bookingId);
         }
     }
 }

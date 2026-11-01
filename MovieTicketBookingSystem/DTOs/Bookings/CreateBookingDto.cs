@@ -8,10 +8,6 @@
 
         public string CustomerPhone { get; set; } = string.Empty;
 
-        public DateTime BookingDate { get; set; } = DateTime.Now;
-
-        public decimal TotalAmount { get; set; }
-
-        public string Status { get; set; } = "Confirmed";
+        public List<int> SeatIds { get; set; } = new();
     }
 }

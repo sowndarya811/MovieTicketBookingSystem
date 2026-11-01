@@ -1,10 +1,11 @@
-﻿using MovieTicketBookingSystem.Models;
+﻿using MovieTicketBookingSystem.DTOs.Bookings;
+using MovieTicketBookingSystem.Models;
 
 namespace MovieTicketBookingSystem.Services.Interfaces
 {
     public interface IBookingService
     {
-        Task<Booking> AddAsync(Booking booking);
+        Task<Booking> CreateBookingAsync(CreateBookingDto dto);
 
         Task<List<Booking>> GetAllAsync();
 
@@ -19,5 +20,7 @@ namespace MovieTicketBookingSystem.Services.Interfaces
         Task<List<BookingSeat>> GetBookingSeatsAsync(int bookingId);
 
         Task AddBookingSeatAsync(BookingSeat bookingSeat);
+
+        Task<bool> CancelBookingAsync(int bookingId);
     }
 }
