@@ -193,6 +193,29 @@ namespace MovieTicketBookingSystem.Migrations
                     b.ToTable("Shows");
                 });
 
+            modelBuilder.Entity("MovieTicketBookingSystem.Models.ShowSeat", b =>
+                {
+                    b.Property<int>("ShowSeatId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShowSeatId"));
+
+                    b.Property<int>("SeatId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShowId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ShowSeatId");
+
+                    b.ToTable("ShowSeats");
+                });
+
             modelBuilder.Entity("MovieTicketBookingSystem.Models.Theatre", b =>
                 {
                     b.Property<int>("TheatreId")

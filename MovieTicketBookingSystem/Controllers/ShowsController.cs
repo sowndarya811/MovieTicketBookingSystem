@@ -103,5 +103,31 @@ namespace MovieTicketBookingSystem.Controllers
 
             return Ok(result);
         }
+        [HttpGet("{showId}/seats")]
+        public async Task<IActionResult> GetShowSeats(int showId)
+        {
+            var seats = await _showService.GetShowSeatsAsync(showId);
+
+            if (seats.Count == 0)
+                return NotFound("No seats found for this show.");
+
+            return Ok(seats);
+        }
+
+        [HttpGet("{showId}/seats/available")]
+        public async Task<IActionResult> GetAvailableShowSeats(int showId)
+        {
+            var seats = await _showService.GetAvailableShowSeatsAsync(showId);
+
+            return Ok(seats);
+        }
+
+        [HttpGet("{showId}/seats/booked")]
+        public async Task<IActionResult> GetBookedShowSeats(int showId)
+        {
+            var seats = await _showService.GetBookedShowSeatsAsync(showId);
+
+            return Ok(seats);
+        }
     }
 }

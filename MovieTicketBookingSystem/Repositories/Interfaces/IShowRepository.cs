@@ -17,5 +17,8 @@ namespace MovieTicketBookingSystem.Repositories.Interfaces
         Task<List<Show>> GetByMovieIdAsync(int movieId);
 
         Task<List<Show>> GetByScreenIdAsync(int screenId);
+        Task<List<ShowSeat>> GetShowSeatsAsync(int showId);
+        Task<List<ShowSeat>> GetAvailableShowSeatsAsync(int showId);
+        Task<List<ShowSeat>> GetBookedShowSeatsAsync(int showId);
     }
 }

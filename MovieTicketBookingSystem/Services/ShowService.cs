@@ -47,5 +47,20 @@ namespace MovieTicketBookingSystem.Services
         {
             return await _showRepository.GetByScreenIdAsync(screenId);
         }
+
+        public async Task<List<ShowSeat>> GetShowSeatsAsync(int showId)
+        {
+            return await _showRepository.GetShowSeatsAsync(showId);
+        }
+
+        public async Task<List<ShowSeat>> GetAvailableShowSeatsAsync(int showId)
+        {
+            return await _showRepository.GetAvailableShowSeatsAsync(showId);
+        }
+
+        public async Task<List<ShowSeat>> GetBookedShowSeatsAsync(int showId)
+        {
+            return await _showRepository.GetBookedShowSeatsAsync(showId);
+        }
     }
 }

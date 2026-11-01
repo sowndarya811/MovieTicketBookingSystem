@@ -19,6 +19,23 @@ namespace MovieTicketBookingSystem.Repositories
             await _context.Shows.AddAsync(show);
             await _context.SaveChangesAsync();
 
+            var seats = await _context.Seats
+                .Where(s => s.ScreenId == show.ScreenId)
+                .ToListAsync();
+
+            var showSeats = seats.Select(seat => new ShowSeat
+            {
+                ShowId = show.ShowId,
+                SeatId = seat.SeatId,
+                Status = "Available"
+            }).ToList();
+
+            if (showSeats.Count > 0)
+            {
+                await _context.ShowSeats.AddRangeAsync(showSeats);
+                await _context.SaveChangesAsync();
+            }
+
             return show;
         }
 
@@ -78,6 +95,27 @@ namespace MovieTicketBookingSystem.Repositories
         {
             return await _context.Shows
                 .Where(s => s.ScreenId == screenId)
+                .ToListAsync();
+        }
+    
+    public async Task<List<ShowSeat>> GetShowSeatsAsync(int showId)
+        {
+            return await _context.ShowSeats
+                .Where(ss => ss.ShowId == showId)
+                .ToListAsync();
+        }
+
+        public async Task<List<ShowSeat>> GetAvailableShowSeatsAsync(int showId)
+        {
+            return await _context.ShowSeats
+                .Where(ss => ss.ShowId == showId && ss.Status == "Available")
+                .ToListAsync();
+        }
+
+        public async Task<List<ShowSeat>> GetBookedShowSeatsAsync(int showId)
+        {
+            return await _context.ShowSeats
+                .Where(ss => ss.ShowId == showId && ss.Status == "Booked")
                 .ToListAsync();
         }
     }

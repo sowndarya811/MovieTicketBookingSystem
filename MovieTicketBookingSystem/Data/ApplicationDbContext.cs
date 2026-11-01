@@ -17,6 +17,7 @@ namespace MovieTicketBookingSystem.Data
         public DbSet<Show> Shows { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<BookingSeat> BookingSeats { get; set; }
+        public DbSet<ShowSeat> ShowSeats { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
