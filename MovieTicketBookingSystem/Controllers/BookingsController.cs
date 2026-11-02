@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MovieTicketBookingSystem.DTOs.Bookings;
 using MovieTicketBookingSystem.Models;
 using MovieTicketBookingSystem.Services.Interfaces;
@@ -7,6 +8,7 @@ namespace MovieTicketBookingSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class BookingsController : ControllerBase
     {
         private readonly IBookingService _bookingService;
@@ -16,7 +18,8 @@ namespace MovieTicketBookingSystem.Controllers
             _bookingService = bookingService;
         }
 
-        // CREATE BOOKING
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateBooking(
             CreateBookingDto dto)
@@ -25,6 +28,9 @@ namespace MovieTicketBookingSystem.Controllers
             {
                 var booking =
                     await _bookingService.CreateBookingAsync(dto);
+
+                if (booking == null)
+                    return BadRequest("Booking could not be created.");
 
                 return CreatedAtAction(
                     nameof(GetBookingById),
@@ -37,7 +43,8 @@ namespace MovieTicketBookingSystem.Controllers
             }
         }
 
-        // GET ALL BOOKINGS
+        // Admin only
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllBookings()
         {
@@ -47,7 +54,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(bookings);
         }
 
-        // GET BOOKING BY ID
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBookingById(int id)
         {
@@ -60,7 +68,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(booking);
         }
 
-        // UPDATE BOOKING
+        // Admin only
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBooking(
             int id,
@@ -84,7 +93,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
-        // DELETE BOOKING
+        // Admin only
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBooking(int id)
         {
@@ -97,7 +107,8 @@ namespace MovieTicketBookingSystem.Controllers
             return NoContent();
         }
 
-        // GET BOOKINGS BY SHOW
+        // Admin only
+        [Authorize(Roles = "Admin")]
         [HttpGet("show/{showId}")]
         public async Task<IActionResult> GetBookingsByShowId(
             int showId)
@@ -108,7 +119,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(bookings);
         }
 
-        // GET BOOKING SEATS
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpGet("{bookingId}/seats")]
         public async Task<IActionResult> GetBookingSeats(
             int bookingId)
@@ -126,7 +138,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(seats);
         }
 
-        // CANCEL BOOKING
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpPut("{id}/cancel")]
         public async Task<IActionResult> CancelBooking(int id)
         {

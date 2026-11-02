@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MovieTicketBookingSystem.DTOs.Theatres;
 using MovieTicketBookingSystem.Models;
 using MovieTicketBookingSystem.Services.Interfaces;
@@ -7,6 +9,7 @@ namespace MovieTicketBookingSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TheatresController : ControllerBase
     {
         private readonly ITheatreService _theatreService;
@@ -16,8 +19,11 @@ namespace MovieTicketBookingSystem.Controllers
             _theatreService = theatreService;
         }
 
+        // Admin only
+        [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<IActionResult> AddTheatre(CreateTheatreDto dto)
+        public async Task<IActionResult> AddTheatre(
+            CreateTheatreDto dto)
         {
             var theatre = new Theatre
             {
@@ -30,6 +36,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllTheatres()
         {
@@ -38,6 +46,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTheatreById(int id)
         {
@@ -49,6 +59,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
+        // Admin only
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTheatre(
             int id,
@@ -69,6 +81,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
+        // Admin only
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTheatre(int id)
         {

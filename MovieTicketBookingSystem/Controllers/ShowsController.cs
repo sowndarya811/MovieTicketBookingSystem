@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MovieTicketBookingSystem.DTOs.Shows;
 using MovieTicketBookingSystem.Models;
 using MovieTicketBookingSystem.Services.Interfaces;
@@ -7,6 +8,7 @@ namespace MovieTicketBookingSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ShowsController : ControllerBase
     {
         private readonly IShowService _showService;
@@ -16,7 +18,8 @@ namespace MovieTicketBookingSystem.Controllers
             _showService = showService;
         }
 
-        // CREATE SHOW
+        // Admin only
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> AddShow(CreateShowDto dto)
         {
@@ -35,7 +38,8 @@ namespace MovieTicketBookingSystem.Controllers
             return StatusCode(201, result);
         }
 
-        // GET ALL SHOWS
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllShows()
         {
@@ -44,7 +48,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
-        // GET SHOW BY ID
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetShowById(int id)
         {
@@ -56,7 +61,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
-        // UPDATE SHOW
+        // Admin only
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateShow(
             int id,
@@ -81,7 +87,8 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
-        // DELETE SHOW
+        // Admin only
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteShow(int id)
         {
@@ -93,29 +100,37 @@ namespace MovieTicketBookingSystem.Controllers
             return NoContent();
         }
 
-        // GET SHOWS BY MOVIE
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpGet("movie/{movieId}")]
-        public async Task<IActionResult> GetShowsByMovieId(int movieId)
+        public async Task<IActionResult> GetShowsByMovieId(
+            int movieId)
         {
-            var result = await _showService.GetByMovieIdAsync(movieId);
+            var result =
+                await _showService.GetByMovieIdAsync(movieId);
 
             return Ok(result);
         }
 
-        // GET SHOWS BY SCREEN
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpGet("screen/{screenId}")]
-        public async Task<IActionResult> GetShowsByScreenId(int screenId)
+        public async Task<IActionResult> GetShowsByScreenId(
+            int screenId)
         {
-            var result = await _showService.GetByScreenIdAsync(screenId);
+            var result =
+                await _showService.GetByScreenIdAsync(screenId);
 
             return Ok(result);
         }
 
-        // GET ALL SHOW SEATS
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpGet("{showId}/seats")]
         public async Task<IActionResult> GetShowSeats(int showId)
         {
-            var seats = await _showService.GetShowSeatsAsync(showId);
+            var seats =
+                await _showService.GetShowSeatsAsync(showId);
 
             if (seats.Count == 0)
                 return NotFound("No seats found for this show.");
@@ -123,20 +138,26 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(seats);
         }
 
-        // GET AVAILABLE SHOW SEATS
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpGet("{showId}/seats/available")]
-        public async Task<IActionResult> GetAvailableShowSeats(int showId)
+        public async Task<IActionResult> GetAvailableShowSeats(
+            int showId)
         {
-            var seats = await _showService.GetAvailableShowSeatsAsync(showId);
+            var seats =
+                await _showService.GetAvailableShowSeatsAsync(showId);
 
             return Ok(seats);
         }
 
-        // GET BOOKED SHOW SEATS
+        // Customer + Admin
+        [Authorize(Roles = "Customer,Admin")]
         [HttpGet("{showId}/seats/booked")]
-        public async Task<IActionResult> GetBookedShowSeats(int showId)
+        public async Task<IActionResult> GetBookedShowSeats(
+            int showId)
         {
-            var seats = await _showService.GetBookedShowSeatsAsync(showId);
+            var seats =
+                await _showService.GetBookedShowSeatsAsync(showId);
 
             return Ok(seats);
         }
