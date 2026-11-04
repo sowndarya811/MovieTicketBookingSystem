@@ -1,8 +1,10 @@
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+
 using MovieTicketBookingSystem.Data;
 using MovieTicketBookingSystem.Middleware;
 using MovieTicketBookingSystem.Models;
@@ -10,11 +12,44 @@ using MovieTicketBookingSystem.Repositories;
 using MovieTicketBookingSystem.Repositories.Interfaces;
 using MovieTicketBookingSystem.Services;
 using MovieTicketBookingSystem.Services.Interfaces;
+using MovieTicketBookingSystem.Authorization;
+
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ==========================================
+// 1. CORS CONFIGURATION
+// ==========================================
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+// ==========================================
+// 2. CONTROLLERS
+// ==========================================
+
 builder.Services.AddControllers();
+
+// ==========================================
+// 3. JWT AUTHENTICATION
+// ==========================================
 
 builder.Services.AddAuthentication(
     JwtBearerDefaults.AuthenticationScheme)
@@ -43,7 +78,18 @@ builder.Services.AddAuthentication(
             };
     });
 
+// ==========================================
+// 4. AUTHORIZATION
+// ==========================================
+
 builder.Services.AddAuthorization();
+
+builder.Services.AddScoped<IAuthorizationHandler,
+    BookingAuthorizationHandler>();
+
+// ==========================================
+// 5. DATABASE CONFIGURATION
+// ==========================================
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
@@ -51,36 +97,55 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
             "DefaultConnection")
     ));
 
+// ==========================================
+// 6. DEPENDENCY INJECTION
+// ==========================================
+
+// Movie
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 builder.Services.AddScoped<IMovieService, MovieService>();
 
+// Theatre
 builder.Services.AddScoped<ITheatreRepository, TheatreRepository>();
 builder.Services.AddScoped<ITheatreService, TheatreService>();
 
+// Screen
 builder.Services.AddScoped<IScreenRepository, ScreenRepository>();
 builder.Services.AddScoped<IScreenService, ScreenService>();
 
+// Seat
 builder.Services.AddScoped<ISeatRepository, SeatRepository>();
 builder.Services.AddScoped<ISeatService, SeatService>();
 
+// Show
 builder.Services.AddScoped<IShowRepository, ShowRepository>();
 builder.Services.AddScoped<IShowService, ShowService>();
 
+// Booking
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 
+// User
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+// JWT Service
 builder.Services.AddScoped<IJwtService, JwtService>();
+
+// ==========================================
+// 7. OPEN API
+// ==========================================
 
 builder.Services.AddOpenApi();
 
+// ==========================================
+// 8. BUILD APPLICATION
+// ==========================================
+
 var app = builder.Build();
 
-
 // ==========================================
-// ADMIN ACCOUNT INITIALIZATION
+// 9. ADMIN ACCOUNT INITIALIZATION
 // ==========================================
 
 using (var scope = app.Services.CreateScope())
@@ -125,9 +190,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
 // ==========================================
-// MIDDLEWARE
+// 10. OPEN API IN DEVELOPMENT
 // ==========================================
 
 if (app.Environment.IsDevelopment())
@@ -135,14 +199,50 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// ==========================================
+// 11. MIDDLEWARE PIPELINE
+// ==========================================
+
+// Global Exception Handler
 app.UseMiddleware<GlobalExceptionHandler>();
 
+// HTTPS Redirection
 app.UseHttpsRedirection();
 
+// Routing
+app.UseRouting();
+
+// Endpoint Metadata Diagnostics
+if (app.Environment.IsDevelopment())
+{
+    app.UseMiddleware<EndpointMetadataMiddleware>();
+}
+
+// CORS
+app.UseCors("AllowAngular");
+
+// Authentication
 app.UseAuthentication();
 
+// Authentication Diagnostics
+if (app.Environment.IsDevelopment())
+{
+    app.UseMiddleware<AuthenticationDiagnosticsMiddleware>();
+
+    app.UseMiddleware<AuthorizationDiagnosticsMiddleware>();
+}
+
+// Authorization
 app.UseAuthorization();
 
+// ==========================================
+// 12. MAP CONTROLLERS
+// ==========================================
+
 app.MapControllers();
+
+// ==========================================
+// 13. RUN APPLICATION
+// ==========================================
 
 app.Run();

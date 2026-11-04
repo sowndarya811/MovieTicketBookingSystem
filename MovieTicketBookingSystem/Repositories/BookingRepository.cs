@@ -32,22 +32,29 @@ namespace MovieTicketBookingSystem.Repositories
                 .FirstOrDefaultAsync(b => b.BookingId == id);
         }
 
+        public async Task<List<Booking>> GetByUserIdAsync(int userId)
+        {
+            return await _context.Bookings
+                .Where(b => b.UserId == userId)
+                .OrderByDescending(b => b.BookingDate)
+                .ToListAsync();
+        }
+
         public async Task<Booking?> UpdateAsync(Booking booking)
         {
-            var existingBooking = await _context.Bookings
+            var existing = await _context.Bookings
                 .FirstOrDefaultAsync(b => b.BookingId == booking.BookingId);
 
-            if (existingBooking == null)
+            if (existing == null)
                 return null;
 
-            existingBooking.ShowId = booking.ShowId;
-            existingBooking.CustomerName = booking.CustomerName;
-            existingBooking.CustomerPhone = booking.CustomerPhone;
-            existingBooking.Status = booking.Status;
+            existing.ShowId = booking.ShowId;
+            existing.CustomerName = booking.CustomerName;
+            existing.CustomerPhone = booking.CustomerPhone;
+            existing.Status = booking.Status;
 
             await _context.SaveChangesAsync();
-
-            return existingBooking;
+            return existing;
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -58,15 +65,14 @@ namespace MovieTicketBookingSystem.Repositories
             if (booking == null)
                 return false;
 
-            var bookingSeats = await _context.BookingSeats
+            var seats = await _context.BookingSeats
                 .Where(bs => bs.BookingId == id)
                 .ToListAsync();
 
-            _context.BookingSeats.RemoveRange(bookingSeats);
+            _context.BookingSeats.RemoveRange(seats);
             _context.Bookings.Remove(booking);
 
             await _context.SaveChangesAsync();
-
             return true;
         }
 
@@ -92,17 +98,17 @@ namespace MovieTicketBookingSystem.Repositories
 
         public async Task<Booking?> CreateBookingAsync(
             Booking booking,
-            List<int> seatIds)
+            List<int> seatIds,
+            int userId)
         {
-            using var transaction = await _context.Database
-                .BeginTransactionAsync();
+            using var transaction =
+                await _context.Database.BeginTransactionAsync();
 
             try
             {
                 var show = await _context.Shows
                     .FirstOrDefaultAsync(s =>
-                        s.ShowId == booking.ShowId &&
-                        s.IsActive);
+                        s.ShowId == booking.ShowId && s.IsActive);
 
                 if (show == null)
                     throw new InvalidOperationException(
@@ -124,15 +130,14 @@ namespace MovieTicketBookingSystem.Repositories
 
                 if (showSeats.Count != seatIds.Count)
                     throw new InvalidOperationException(
-                        "One or more selected seats are invalid for this show.");
+                        "Invalid seats selected.");
 
-                if (showSeats.Any(ss => ss.Status == "Booked"))
+                if (showSeats.Any(ss => ss.Status != "Available"))
                     throw new InvalidOperationException(
-                        "One or more selected seats are already booked.");
+                        "One or more seats are already booked.");
 
-                booking.TotalAmount =
-                    seatIds.Count * show.BasePrice;
-
+                booking.UserId = userId;
+                booking.TotalAmount = seatIds.Count * show.BasePrice;
                 booking.Status = "Confirmed";
                 booking.BookingDate = DateTime.Now;
 
@@ -143,18 +148,16 @@ namespace MovieTicketBookingSystem.Repositories
                 {
                     showSeat.Status = "Booked";
 
-                    var bookingSeat = new BookingSeat
-                    {
-                        BookingId = booking.BookingId,
-                        SeatId = showSeat.SeatId,
-                        Price = show.BasePrice
-                    };
-
-                    await _context.BookingSeats.AddAsync(bookingSeat);
+                    await _context.BookingSeats.AddAsync(
+                        new BookingSeat
+                        {
+                            BookingId = booking.BookingId,
+                            SeatId = showSeat.SeatId,
+                            Price = show.BasePrice
+                        });
                 }
 
                 await _context.SaveChangesAsync();
-
                 await transaction.CommitAsync();
 
                 return booking;
@@ -168,14 +171,13 @@ namespace MovieTicketBookingSystem.Repositories
 
         public async Task<Booking?> CancelBookingAsync(int bookingId)
         {
-            using var transaction = await _context.Database
-                .BeginTransactionAsync();
+            using var transaction =
+                await _context.Database.BeginTransactionAsync();
 
             try
             {
                 var booking = await _context.Bookings
-                    .FirstOrDefaultAsync(b =>
-                        b.BookingId == bookingId);
+                    .FirstOrDefaultAsync(b => b.BookingId == bookingId);
 
                 if (booking == null)
                     return null;
@@ -188,12 +190,12 @@ namespace MovieTicketBookingSystem.Repositories
                     .Where(bs => bs.BookingId == bookingId)
                     .ToListAsync();
 
-                foreach (var bookingSeat in bookingSeats)
+                foreach (var item in bookingSeats)
                 {
                     var showSeat = await _context.ShowSeats
                         .FirstOrDefaultAsync(ss =>
                             ss.ShowId == booking.ShowId &&
-                            ss.SeatId == bookingSeat.SeatId);
+                            ss.SeatId == item.SeatId);
 
                     if (showSeat != null)
                         showSeat.Status = "Available";

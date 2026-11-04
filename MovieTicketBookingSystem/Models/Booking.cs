@@ -4,6 +4,8 @@
     {
         public int BookingId { get; set; }
 
+        public int? UserId { get; set; }
+
         public int ShowId { get; set; }
 
         public string CustomerName { get; set; } = string.Empty;
@@ -15,5 +17,7 @@
         public decimal TotalAmount { get; set; }
 
         public string Status { get; set; } = "Confirmed";
+
+        public User? User { get; set; }
     }
 }

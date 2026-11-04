@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieTicketBookingSystem.DTOs.Bookings;
 using MovieTicketBookingSystem.Models;
 using MovieTicketBookingSystem.Services.Interfaces;
+using MovieTicketBookingSystem.Authorization;
 
 namespace MovieTicketBookingSystem.Controllers
 {
@@ -12,13 +14,17 @@ namespace MovieTicketBookingSystem.Controllers
     public class BookingsController : ControllerBase
     {
         private readonly IBookingService _bookingService;
+        private readonly IAuthorizationService _authorizationService;
 
-        public BookingsController(IBookingService bookingService)
+        public BookingsController(
+            IBookingService bookingService,
+            IAuthorizationService authorizationService)
         {
             _bookingService = bookingService;
+            _authorizationService = authorizationService;
         }
 
-        // Customer + Admin
+        // Customer + Admin: Create Booking
         [Authorize(Roles = "Customer,Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateBooking(
@@ -26,8 +32,15 @@ namespace MovieTicketBookingSystem.Controllers
         {
             try
             {
+                var userIdValue = User.FindFirst(
+                    System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+                if (!int.TryParse(userIdValue, out int userId))
+                    return Unauthorized();
+
                 var booking =
-                    await _bookingService.CreateBookingAsync(dto);
+                    await _bookingService.CreateBookingAsync(
+                        dto, userId);
 
                 if (booking == null)
                     return BadRequest("Booking could not be created.");
@@ -43,7 +56,7 @@ namespace MovieTicketBookingSystem.Controllers
             }
         }
 
-        // Admin only
+        // Admin only: Get All Bookings
         [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllBookings()
@@ -54,7 +67,24 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(bookings);
         }
 
-        // Customer + Admin
+        // Customer only: Get Own Bookings
+        [Authorize(Roles = "Customer")]
+        [HttpGet("my-bookings")]
+        public async Task<IActionResult> GetMyBookings()
+        {
+            var userIdValue = User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(userIdValue, out int userId))
+                return Unauthorized();
+
+            var bookings =
+                await _bookingService.GetByUserIdAsync(userId);
+
+            return Ok(bookings);
+        }
+
+        // Customer + Admin: Get Booking By ID
         [Authorize(Roles = "Customer,Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBookingById(int id)
@@ -65,10 +95,19 @@ namespace MovieTicketBookingSystem.Controllers
             if (booking == null)
                 return NotFound("Booking not found.");
 
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    booking,
+                    new BookingAuthorizationRequirement());
+
+            if (!authorizationResult.Succeeded)
+                return Forbid();
+
             return Ok(booking);
         }
 
-        // Admin only
+        // Admin only: Update Booking
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBooking(
@@ -93,7 +132,7 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(result);
         }
 
-        // Admin only
+        // Admin only: Delete Booking
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBooking(int id)
@@ -107,7 +146,7 @@ namespace MovieTicketBookingSystem.Controllers
             return NoContent();
         }
 
-        // Admin only
+        // Admin only: Get Bookings By Show ID
         [Authorize(Roles = "Admin")]
         [HttpGet("show/{showId}")]
         public async Task<IActionResult> GetBookingsByShowId(
@@ -119,7 +158,7 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(bookings);
         }
 
-        // Customer + Admin
+        // Customer + Admin: Get Booking Seats
         [Authorize(Roles = "Customer,Admin")]
         [HttpGet("{bookingId}/seats")]
         public async Task<IActionResult> GetBookingSeats(
@@ -131,6 +170,15 @@ namespace MovieTicketBookingSystem.Controllers
             if (booking == null)
                 return NotFound("Booking not found.");
 
+            var authorizationResult =
+                await _authorizationService.AuthorizeAsync(
+                    User,
+                    booking,
+                    new BookingAuthorizationRequirement());
+
+            if (!authorizationResult.Succeeded)
+                return Forbid();
+
             var seats =
                 await _bookingService.GetBookingSeatsAsync(
                     bookingId);
@@ -138,7 +186,7 @@ namespace MovieTicketBookingSystem.Controllers
             return Ok(seats);
         }
 
-        // Customer + Admin
+        // Customer + Admin: Cancel Booking
         [Authorize(Roles = "Customer,Admin")]
         [HttpPut("{id}/cancel")]
         public async Task<IActionResult> CancelBooking(int id)
@@ -146,12 +194,27 @@ namespace MovieTicketBookingSystem.Controllers
             try
             {
                 var booking =
-                    await _bookingService.CancelBookingAsync(id);
+                    await _bookingService.GetByIdAsync(id);
 
                 if (booking == null)
                     return NotFound("Booking not found.");
 
-                return Ok(booking);
+                var authorizationResult =
+                    await _authorizationService.AuthorizeAsync(
+                        User,
+                        booking,
+                        new BookingAuthorizationRequirement());
+
+                if (!authorizationResult.Succeeded)
+                    return Forbid();
+
+                var result =
+                    await _bookingService.CancelBookingAsync(id);
+
+                if (result == null)
+                    return NotFound("Booking not found.");
+
+                return Ok(result);
             }
             catch (InvalidOperationException ex)
             {

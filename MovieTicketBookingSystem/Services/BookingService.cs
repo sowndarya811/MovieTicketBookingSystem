@@ -29,6 +29,11 @@ namespace MovieTicketBookingSystem.Services
             return await _bookingRepository.GetByIdAsync(id);
         }
 
+        public async Task<List<Booking>> GetByUserIdAsync(int userId)
+        {
+            return await _bookingRepository.GetByUserIdAsync(userId);
+        }
+
         public async Task<Booking?> UpdateAsync(Booking booking)
         {
             return await _bookingRepository.UpdateAsync(booking);
@@ -54,7 +59,9 @@ namespace MovieTicketBookingSystem.Services
             await _bookingRepository.AddBookingSeatAsync(bookingSeat);
         }
 
-        public async Task<Booking?> CreateBookingAsync(CreateBookingDto dto)
+        public async Task<Booking?> CreateBookingAsync(
+            CreateBookingDto dto,
+            int userId)
         {
             if (string.IsNullOrWhiteSpace(dto.CustomerName))
                 throw new InvalidOperationException(
@@ -68,16 +75,15 @@ namespace MovieTicketBookingSystem.Services
                 throw new InvalidOperationException(
                     "At least one seat must be selected.");
 
-            var booking = new Booking
-            {
-                ShowId = dto.ShowId,
-                CustomerName = dto.CustomerName,
-                CustomerPhone = dto.CustomerPhone
-            };
-
             return await _bookingRepository.CreateBookingAsync(
-                booking,
-                dto.SeatIds);
+                new Booking
+                {
+                    ShowId = dto.ShowId,
+                    CustomerName = dto.CustomerName,
+                    CustomerPhone = dto.CustomerPhone
+                },
+                dto.SeatIds,
+                userId);
         }
 
         public async Task<Booking?> CancelBookingAsync(int bookingId)
